@@ -20,7 +20,7 @@ public class CategoriaControl {
     private DefaultTableModel modeloTabla;
     public int registrosMostrados;
     
-    private CategoriaControl(){
+    public CategoriaControl(){
         this.DATOS = new CategoriaDAO();
         this.obj = new Categoria();
         this.registrosMostrados = 0;
