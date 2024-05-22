@@ -69,31 +69,33 @@ public class CategoriaControl {
         }
     }
     
-    public String actualizar (int id, String nombre, String nombreAnt, String descripcion){
-        if(nombre.equals(nombreAnt)){
-            obj.setId(id);
-            obj.setNombre(nombre);
-            obj.setDescripcion(descripcion);
-            if(DATOS.actualizar(obj)){
+    public String actualizar(int id, String nombre, String nombreAnt, String descripcion) {
+    // Asegurar que los parámetros básicos sean asignados al objeto antes de la lógica condicional
+    obj.setId(id);
+    obj.setNombre(nombre);
+    obj.setDescripcion(descripcion);
+
+    // Si el nombre no ha cambiado, simplemente intentamos actualizar
+    if (nombre.equals(nombreAnt)) {
+        if (DATOS.actualizar(obj)) {
+            return "OK";
+        } else {
+            return "Error en la actualización";
+        }
+    } else {
+        // Si el nombre ha cambiado, verificamos que no exista ya en la base de datos
+        if (DATOS.existe(nombre)) {
+            return "El registro ya existe";
+        } else {
+            if (DATOS.actualizar(obj)) {
                 return "OK";
-            }
-            else{
-                return "Error en la actuzalicacion";
-            }
-        }else{
-            if(DATOS.existe(nombre)){
-                return "El registro ya existe";
-            }else{
-                obj.setNombre(nombre);
-                obj.setDescripcion(descripcion);
-                if(DATOS.actualizar(obj)){
-                    return "OK";
-                }else{
-                    return "Error en la actualizacion";
-                }
+            } else {
+                return "Error en la actualización";
             }
         }
     }
+}
+
     
     public String desactivar(int id){
         if (DATOS.desactivar(id)){
@@ -105,9 +107,9 @@ public class CategoriaControl {
     
     public String activar(int id){
         if(DATOS.activar(id)){
-            return "Ok";
+            return "OK";
         }else{
-            return "No se puede desactivar";
+            return "El registro no se puede activar";
         }
     }
     
