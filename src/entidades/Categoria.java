@@ -24,6 +24,13 @@ public class Categoria {
         this.activo = activo;
     }
 
+    public Categoria(int id, String nombre) {
+        this.id = id;
+        this.nombre = nombre;
+    }
+    
+    
+
     public int getId() {
         return id;
     }
@@ -58,7 +65,7 @@ public class Categoria {
 
     @Override
     public String toString() {
-        return "Categoria{" + "id=" + id + ", nombre=" + nombre + ", descripcion=" + descripcion + ", activo=" + activo + '}';
+        return nombre;
     }
     
     

@@ -8,8 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import database.Conexion;
-import datos.interfaces.CrudSimpleInterface;
-import entidades.Categoria;
+import datos.interfaces.CrudPaginadoInterface;
+import entidades.Articulo;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
@@ -18,7 +18,7 @@ import javax.swing.*;
  *
  * @author USUARIO
  */
-public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
+public class ArticuloDAO implements CrudPaginadoInterface<Articulo>{
     
     private final Conexion CON;
     private PreparedStatement ps;
@@ -26,42 +26,22 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     private boolean resp;
     private String query;
     
-    public CategoriaDAO(){
+    public ArticuloDAO(){
         CON = Conexion.getInstancia();
     }
 
     @Override
-    public List<Categoria> listar(String texto) {
-        List<Categoria> registros = new ArrayList();
+    public List<Articulo> listar(String texto,int totalPorPagina,int numPagina) {
+        List<Articulo> registros = new ArrayList();
         try {
-            query = "SELECT * FROM categoria where nombre LIKE ?";
+            query = "SELECT a.id,a.categoria_id,c.nombre as categoria_nombre, a.codigo, a.nombre,a.precio_venta, a.stock, a.descripcion,a.imagen,a.activo FROM articulo a inner join categoria c ON a.categoria_id=c.id where a.nombre LIKE ? ORDER BY a.id ASC LIMIT ?,?";
             ps = CON.connectar().prepareStatement(query);
             ps.setString(1,"%"+texto+"%");
+            ps.setInt(2, (numPagina-1)*totalPorPagina);
+            ps.setInt(3, totalPorPagina);
             rs = ps.executeQuery();
             while(rs.next()){
-                registros.add(new Categoria(rs.getInt(1),rs.getString(2),rs.getString(3),rs.getBoolean(4)));
-            }
-            ps.close();
-            rs.close();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null,"Error al listar categorias: "+e.getMessage());
-        } finally{
-            ps = null;
-            rs = null;
-            CON.desconectar();
-        }
-        
-        return registros;
-    }
-    
-    public List<Categoria> seleccionar() {
-        List<Categoria> registros = new ArrayList();
-        try {
-            query = "SELECT id, nombre FROM categoria ORDER BY nombre ASC";
-            ps = CON.connectar().prepareStatement(query);
-            rs = ps.executeQuery();
-            while(rs.next()){
-                registros.add(new Categoria(rs.getInt(1),rs.getString(2)));
+                registros.add(new Articulo(rs.getInt(1),rs.getInt(2),rs.getString(3),rs.getString(4),rs.getString(5),rs.getDouble(6),rs.getInt(7),rs.getString(8),rs.getString(9),rs.getBoolean(10)));
             }
             ps.close();
             rs.close();
@@ -77,13 +57,18 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     }
 
     @Override
-    public boolean insertar(Categoria obj) {
+    public boolean insertar(Articulo obj) {
         resp = false;
         try {
-            query = "INSERT INTO categoria (nombre, descripcion, activo) VALUES (?,?,1)";
+            query = "INSERT INTO articulo (categoria_id,codigo,nombre,precio_venta,stock, descripcion,imagen, activo) VALUES (?,?,?,?,?,?,?,1)";
             ps = CON.connectar().prepareStatement(query);
-            ps.setString(1, obj.getNombre());
-            ps.setString(2, obj.getDescripcion());
+            ps.setInt(1, obj.getCategoriaId());
+            ps.setString(2, obj.getCodigo());
+            ps.setString(3, obj.getNombre());
+            ps.setDouble(4, obj.getPrecioVenta());
+            ps.setInt(5, obj.getStock());
+            ps.setString(6, obj.getDescripcion());
+            ps.setString(7, obj.getImagen());
             if(ps.executeUpdate() > 0){
                 resp = true;
             }
@@ -99,14 +84,19 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     }
 
     @Override
-    public boolean actualizar(Categoria obj) {
+    public boolean actualizar(Articulo obj) {
         resp = false;
         try {
-            query = "UPDATE categoria SET nombre = ?, descripcion = ? WHERE id = ?";
+            query = "UPDATE articulo SET categoria_id=?,codigo=?, nombre = ?,precio_venta=?,stock=?, descripcion = ?,imagen=? WHERE id = ?";
             ps = CON.connectar().prepareStatement(query);
-            ps.setString(1, obj.getNombre());
-            ps.setString(2, obj.getDescripcion());
-            ps.setInt(3, obj.getId());
+            ps.setInt(1, obj.getCategoriaId());
+            ps.setString(2, obj.getCodigo());
+            ps.setString(3, obj.getNombre());
+            ps.setDouble(4, obj.getPrecioVenta());
+            ps.setInt(5, obj.getStock());
+            ps.setString(6, obj.getDescripcion());
+            ps.setString(7, obj.getImagen());
+            ps.setInt(8, obj.getId());
             if(ps.executeUpdate() > 0){
                 resp = true;
             }
@@ -125,7 +115,7 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     public boolean desactivar(int id) {
         resp = false;
         try {
-            query = "UPDATE categoria SET activo = 0 WHERE id = ?";
+            query = "UPDATE articulo SET activo = 0 WHERE id = ?";
             ps = CON.connectar().prepareStatement(query);
             ps.setInt(1, id);
             if(ps.executeUpdate() > 0){
@@ -146,7 +136,7 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     public boolean activar(int id) {
         resp = false;
         try {
-            query = "UPDATE categoria SET activo = 1 WHERE id = ?";
+            query = "UPDATE articulo SET activo = 1 WHERE id = ?";
             ps = CON.connectar().prepareStatement(query);
             ps.setInt(1, id);
             if(ps.executeUpdate() > 0){
@@ -167,7 +157,7 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     public int total() {
         int totalRegistros = 0;
         try {
-            query = "SELECT COUNT(id) FROM categoria";
+            query = "SELECT COUNT(id) FROM articulo";
             ps = CON.connectar().prepareStatement(query);
             rs = ps.executeQuery();
             while (rs.next()) {                
@@ -190,7 +180,7 @@ public class CategoriaDAO implements CrudSimpleInterface<Categoria>{
     public boolean existe(String texto) {
         resp = false;
         try {
-            query = "SELECT nombre FROM categoria WHERE nombre = ?";
+            query = "SELECT nombre FROM articulo WHERE nombre = ?";
             ps = CON.connectar().prepareStatement(query);
             ps.setString(1, texto);
             rs = ps.executeQuery();
